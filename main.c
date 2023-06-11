@@ -1,10 +1,13 @@
 #include "lib.h"
 #include <ncurses.h>
+#include <pthread.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 
-pthread_mutex_t screen_mut = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t screen_mut = PTHREAD_MUTEX_INITIALIZER,
+                snake_mut  = PTHREAD_MUTEX_INITIALIZER;
+
+PairPos foodPair;
 
 void initializeWindow() {
   initscr();          //initalizes the terminal screen, start curses mode
@@ -14,9 +17,13 @@ void initializeWindow() {
   start_color();
 
   //initialize color pairs -> (the identifier of the pair, foreground  color, and background color)
-  init_pair(SNAKE_COLOR, COLOR_BLACK, COLOR_RED);
+  init_pair(SNAKE_COLOR, COLOR_BLACK, COLOR_GREEN);
   init_pair(FOOD_COLOR, COLOR_BLACK, COLOR_RED);
-  init_pair(POINTS_COLOR, COLOR_BLACK, COLOR_RED);
+  init_pair(POINTS_COLOR, COLOR_BLACK, COLOR_WHITE);
+  init_pair(BACKGROUND_COLOR, COLOR_BLACK, COLOR_BLACK);
+
+  //first food
+  foodPair = generate_food();
 }
 
 void freeWindow() {
@@ -24,25 +31,40 @@ void freeWindow() {
 }
 
 void *drawThread(void *arg) {
-  //for(int i = 5; i < 30; i++) {
-  //  pthread_mutex_lock(&screen_mut);
-  //    mvprintw(i, 0, "c");
-  //    refresh();
-  //  pthread_mutex_unlock(&screen_mut);
-  //usleep(10000);
-  //}
+  Snake *s = (Snake *) arg;
+  
+  while(snake_get_curr_direction(s) != 'q' && snake_get_curr_direction(s) != 'Q') {
+    PairPos head_pair = snake_get_head(s), tail_pair = snake_get_tail(s);
+
+    attron(COLOR_PAIR(SNAKE_COLOR));
+    mvprintw(head_pair.x, head_pair.y, "*");
+    attroff(COLOR_PAIR(SNAKE_COLOR));
+    //attron(COLOR_PAIR(BACKGROUND_COLOR));
+    //mvprintw(tail_pair.x, tail_pair.y, " ");
+    //attroff(COLOR_PAIR(BACKGROUND_COLOR));
+
+    refresh();
+    if(head_pair.x == foodPair.x && head_pair.y == foodPair.y) {
+
+    }   
+    pthread_mutex_lock(&snake_mut);
+    snake_move(s);
+    pthread_mutex_unlock(&snake_mut);
+    usleep(100000);
+  }
 
   return (void *) NULL;
 }
 
 void *keyboardThread(void *arg) {
-  //for(int i = 5; i < 30; i++) {
-  //  pthread_mutex_lock(&screen_mut);
-  //    mvprintw(i, 1, "u");
-  //    refresh();
-  //  pthread_mutex_unlock(&screen_mut);
-  //usleep(10000);
-  //}
+  Snake *s = (Snake *) arg;
+  char c;
+  while(snake_get_curr_direction(s) != 'q' && snake_get_curr_direction(s) != 'Q') {
+    c = getch();
+    pthread_mutex_lock(&snake_mut);
+    snake_change_curr_direction(s, c);
+    pthread_mutex_unlock(&snake_mut);
+  }
 
   return (void *) NULL;
 }
@@ -52,12 +74,13 @@ int main() {
   Snake *s = snake_create();
 
   pthread_t draw, keyboard;
-  pthread_create(&draw, NULL, &drawThread, NULL);
-  pthread_create(&keyboard, NULL, &keyboardThread, NULL);
+  pthread_create(&draw, NULL, &drawThread, (void *) s);
+  pthread_create(&keyboard, NULL, &keyboardThread, (void *) s);
 
   pthread_join(draw, NULL);
   pthread_join(keyboard, NULL);
 
+  sleep(1);
   snake_destroy(s);
   freeWindow();
   return 0;

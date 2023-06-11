@@ -9,21 +9,39 @@
 #include <unistd.h>
 #include <time.h>
 #include <stdint.h>
+#include <ctype.h>
+#include <string.h>
 
+//dimensions
 #define MAX_X 46
 #define MAX_Y 72
 
-#define SNAKE_COLOR   1
-#define FOOD_COLOR    2
-#define POINTS_COLOR  3
+enum COLORS {
+  SNAKE_COLOR = 1,
+  FOOD_COLOR,
+  POINTS_COLOR,
+  BACKGROUND_COLOR
+};
 
 typedef struct {
-  int8_t x, y;
+  uint8_t x, y;
 } PairPos;
 
+//snake functions
 typedef struct Snake Snake;
 Snake *snake_create();
 void snake_destroy(Snake *s);
-void push_pair(Snake *s, PairPos pair);
+PairPos snake_get_head(Snake *s);
+PairPos snake_get_tail(Snake *s);
+char snake_get_curr_direction(Snake *s);
+uint8_t snake_get_len(Snake *s);
+void snake_push_pair(Snake *s, PairPos pair);
+void snake_change_curr_direction(Snake *s, char c);
+void snake_move(Snake* s);
+
+//screen functions
+PairPos generate_food();
+void update_snake();
+void update_points();
 
 #endif
