@@ -25,7 +25,7 @@ typedef struct {
 
 //snake functions
 typedef struct Snake Snake;
-Snake *snake_create();
+Snake *snake_create(unsigned max_x, unsigned max_y);
 void snake_destroy(Snake *s);
 PairPos snake_get_head(Snake *s);
 PairPos snake_get_tail(Snake *s);

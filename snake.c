@@ -1,8 +1,4 @@
 #include "lib.h"
-#include <ctype.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
 
 typedef struct Snake {
   char currDirection;
@@ -10,7 +6,7 @@ typedef struct Snake {
   PairPos *bodyPositions;
 } Snake;
 
-Snake *snake_create() {
+Snake *snake_create(unsigned max_x, unsigned max_y) {
   Snake *s = (Snake *) malloc(sizeof(Snake));
   if(s == NULL) {
     perror("Fail to malloc Snake");
@@ -26,8 +22,8 @@ Snake *snake_create() {
   s->len = 1;
   s->capacity = 1;
   s->currDirection = 's';
-  s->bodyPositions[0].x = MAX_X/2;
-  s->bodyPositions[0].y = MAX_Y/2;
+  s->bodyPositions[0].x = max_x/2;
+  s->bodyPositions[0].y = max_y/2;
 
   return s;
 }

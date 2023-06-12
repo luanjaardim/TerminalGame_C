@@ -1,6 +1,4 @@
 #include "lib.h"
-#include <ncurses.h>
-#include <stddef.h>
 
 unsigned MAX_X, MAX_Y;
 PairPos foodPair;
@@ -78,7 +76,7 @@ void *keyboardThread(void *arg) {
         //even if the curr direction is shared between the two threads
         //only this one writes on the data
     
-    usleep((int)1e4);
+    usleep((int)1e3);
   }
 
   return (void *) NULL;
@@ -86,7 +84,7 @@ void *keyboardThread(void *arg) {
 
 int main() {
   initializeWindow();
-  Snake *s = snake_create();
+  Snake *s = snake_create(MAX_X, MAX_Y);
 
   pthread_t draw, keyboard;
   pthread_create(&draw, NULL, &drawThread, (void *) s);
