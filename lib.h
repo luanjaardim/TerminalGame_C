@@ -37,7 +37,7 @@ void snake_move(Snake* s);
 int snake_check_body_colisions(Snake *s);
 
 //screen functions
-PairPos generate_food();
+PairPos generate_food(unsigned max_x, unsigned max_y);
 void update_snake();
 void update_points();
 

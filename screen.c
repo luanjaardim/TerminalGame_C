@@ -1,8 +1,8 @@
 #include "lib.h"
 #include <ncurses.h>
 
-PairPos generate_food() {
-  PairPos pair = { .x = rand()%MAX_X, .y = rand()%MAX_Y };
+PairPos generate_food(unsigned max_x, unsigned max_y) {
+  PairPos pair = { .x = rand()%max_x, .y = rand()%max_y };
   attron(COLOR_PAIR(FOOD_COLOR));
   //mvchgat(pair.x, pair.y, 1, A_NORMAL, FOOD_COLOR, NULL);
   mvprintw(pair.x, pair.y, "$");

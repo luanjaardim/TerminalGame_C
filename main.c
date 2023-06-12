@@ -19,7 +19,7 @@ void initializeWindow() {
 	init_pair(BACKGROUND_COLOR, COLOR_BLACK, COLOR_BLACK);
 
 	//first food
-	foodPair = generate_food();
+	foodPair = generate_food(MAX_X, MAX_Y);
 }
 
 void freeWindow() {
@@ -45,7 +45,7 @@ void *drawThread(void *arg) {
 
 		if(head_pair.x == foodPair.x && head_pair.y == foodPair.y) {
 			snake_push_pair(s, tail_pair);
-			foodPair = generate_food();
+			foodPair = generate_food(MAX_X, MAX_Y);
 		} else {
 			attron(COLOR_PAIR(BACKGROUND_COLOR));
 			mvprintw(tail_pair.x, tail_pair.y, " ");
