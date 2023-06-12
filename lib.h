@@ -12,10 +12,6 @@
 #include <ctype.h>
 #include <string.h>
 
-//dimensions
-#define MAX_X 46
-#define MAX_Y 72
-
 enum COLORS {
   SNAKE_COLOR = 1,
   FOOD_COLOR,
@@ -38,6 +34,7 @@ uint8_t snake_get_len(Snake *s);
 void snake_push_pair(Snake *s, PairPos pair);
 void snake_change_curr_direction(Snake *s, char c);
 void snake_move(Snake* s);
+int snake_check_body_colisions(Snake *s);
 
 //screen functions
 PairPos generate_food();

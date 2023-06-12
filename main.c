@@ -1,56 +1,63 @@
 #include "lib.h"
 #include <ncurses.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <stddef.h>
 
-pthread_mutex_t screen_mut = PTHREAD_MUTEX_INITIALIZER,
-                snake_mut  = PTHREAD_MUTEX_INITIALIZER;
-
+unsigned MAX_X, MAX_Y;
 PairPos foodPair;
 
 void initializeWindow() {
-  initscr();          //initalizes the terminal screen, start curses mode
-  raw();              //turn off line buffering, so we don't to press Enter on getch, by example
-  noecho();           //what we type doesn't appears on the screen
-  srand(time(NULL));
-  start_color();
+	initscr();          //initalizes the terminal screen, start curses mode
+	raw();              //turn off line buffering, so we don't to press Enter on getch, by example
+	noecho();           //what we type doesn't appears on the screen
+  getmaxyx(stdscr, MAX_X, MAX_Y);
+	srand(time(NULL));
+	start_color();
+	curs_set(0);
 
-  //initialize color pairs -> (the identifier of the pair, foreground  color, and background color)
-  init_pair(SNAKE_COLOR, COLOR_BLACK, COLOR_GREEN);
-  init_pair(FOOD_COLOR, COLOR_BLACK, COLOR_RED);
-  init_pair(POINTS_COLOR, COLOR_BLACK, COLOR_WHITE);
-  init_pair(BACKGROUND_COLOR, COLOR_BLACK, COLOR_BLACK);
+	//initialize color pairs -> (the identifier of the pair, foreground  color, and background color)
+	init_pair(SNAKE_COLOR, COLOR_BLACK, COLOR_GREEN);
+	init_pair(FOOD_COLOR, COLOR_BLACK, COLOR_RED);
+	init_pair(POINTS_COLOR, COLOR_BLACK, COLOR_WHITE);
+	init_pair(BACKGROUND_COLOR, COLOR_BLACK, COLOR_BLACK);
 
-  //first food
-  foodPair = generate_food();
+	//first food
+	foodPair = generate_food();
 }
 
 void freeWindow() {
-  endwin(); //destroy the window created with initscr
+	endwin(); //destroy the window created with initscr
 }
 
 void *drawThread(void *arg) {
-  Snake *s = (Snake *) arg;
-  
-  while(snake_get_curr_direction(s) != 'q' && snake_get_curr_direction(s) != 'Q') {
-    PairPos head_pair = snake_get_head(s), tail_pair = snake_get_tail(s);
+	Snake *s = (Snake *) arg;
 
-    attron(COLOR_PAIR(SNAKE_COLOR));
-    mvprintw(head_pair.x, head_pair.y, "*");
-    attroff(COLOR_PAIR(SNAKE_COLOR));
-    //attron(COLOR_PAIR(BACKGROUND_COLOR));
-    //mvprintw(tail_pair.x, tail_pair.y, " ");
-    //attroff(COLOR_PAIR(BACKGROUND_COLOR));
+	while(snake_get_curr_direction(s) != 'q' && snake_get_curr_direction(s) != 'Q') {
+		PairPos tail_pair = snake_get_tail(s);
+		snake_move(s);
+		PairPos head_pair = snake_get_head(s);
 
-    refresh();
-    if(head_pair.x == foodPair.x && head_pair.y == foodPair.y) {
+    if(snake_check_body_colisions(s) || 
+        head_pair.x >= MAX_X || head_pair.y >= MAX_Y ||
+        head_pair.x < 0 || head_pair.y < 0)
+      break;
 
-    }   
-    pthread_mutex_lock(&snake_mut);
-    snake_move(s);
-    pthread_mutex_unlock(&snake_mut);
-    usleep(100000);
+		attron(COLOR_PAIR(SNAKE_COLOR));
+		mvprintw(head_pair.x, head_pair.y, "*");
+		attroff(COLOR_PAIR(SNAKE_COLOR));
+
+		if(head_pair.x == foodPair.x && head_pair.y == foodPair.y) {
+			snake_push_pair(s, tail_pair);
+			foodPair = generate_food();
+		} else {
+			attron(COLOR_PAIR(BACKGROUND_COLOR));
+			mvprintw(tail_pair.x, tail_pair.y, " ");
+			attroff(COLOR_PAIR(BACKGROUND_COLOR));
+		}
+		refresh();
+
+    //mvprintw(0, 0, "%c     ", snake_get_curr_direction(s));
+    if(snake_get_curr_direction(s) != 'a' && snake_get_curr_direction(s) != 'd') usleep((int)8e4);
+    else usleep((int) 5e4);
   }
 
   return (void *) NULL;
@@ -60,10 +67,18 @@ void *keyboardThread(void *arg) {
   Snake *s = (Snake *) arg;
   char c;
   while(snake_get_curr_direction(s) != 'q' && snake_get_curr_direction(s) != 'Q') {
-    c = getch();
-    pthread_mutex_lock(&snake_mut);
-    snake_change_curr_direction(s, c);
-    pthread_mutex_unlock(&snake_mut);
+    c = tolower(getch());
+    if(
+    (c == 'a' && snake_get_curr_direction(s) != 'd') ||
+    (c == 'w' && snake_get_curr_direction(s) != 's') ||
+    (c == 'd' && snake_get_curr_direction(s) != 'a') ||
+    (c == 's' && snake_get_curr_direction(s) != 'w') ||
+     c=='q') 
+        snake_change_curr_direction(s, c);
+        //even if the curr direction is shared between the two threads
+        //only this one writes on the data
+    
+    usleep((int)1e4);
   }
 
   return (void *) NULL;
@@ -85,23 +100,3 @@ int main() {
   freeWindow();
   return 0;
 }
- // init_pair(1, COLOR_RED, COLOR_GREEN);
- // mvprintw(9, 10, "A Big string which i didn't care to type fully ");
- // mvchgat(9, 10, 100, A_BOLD, 1, NULL);
- // refresh();
-
- // int x, y;
- // getmaxyx(stdscr, x, y);
- // for(int i = 5; i < x-5; i++) {
- //   usleep(10000);
- //   mvchgat(10, i, 1, A_BOLD, SNAKE_COLOR, NULL);
- //   refresh();
- // }
- // refresh();
- // //printw("%d %d", x, y);
- // char ch;
- // scanf("%c", &ch);
- // mvprintw(10, 10, "%d", ch);
- // refresh();
-
- // sleep(2);

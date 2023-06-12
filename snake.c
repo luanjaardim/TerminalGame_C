@@ -1,4 +1,5 @@
 #include "lib.h"
+#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -78,7 +79,7 @@ void snake_change_curr_direction(Snake *s, char c) {
  * and put the new head on the first
  */
 void move_prev_pos_back(PairPos *pos, size_t len, PairPos new_pos) {
-  memmove(pos + 1, pos, len-1);
+  memmove(pos + 1, pos, len);
   pos[0] = new_pos;
 }
 
@@ -105,5 +106,14 @@ void snake_move(Snake* s) {
     default:
     break;
   }
-  move_prev_pos_back(s->bodyPositions, s->len, newPos);
+  move_prev_pos_back(s->bodyPositions, (s->len-1) * sizeof(PairPos), newPos);
+}
+
+int snake_check_body_colisions(Snake *s) {
+  for(int pos = 4; pos < s->len; pos++) {
+    if(s->bodyPositions[pos].x == s->bodyPositions[0].x
+      && s->bodyPositions[pos].y == s->bodyPositions[0].y)
+      return 1;
+  }
+  return 0;
 }
