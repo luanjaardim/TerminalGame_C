@@ -2,7 +2,7 @@
 
 typedef struct Snake {
   char currDirection;
-  uint8_t len, capacity;
+  unsigned len, capacity;
   PairPos *bodyPositions;
 } Snake;
 
@@ -36,7 +36,7 @@ void snake_destroy(Snake *s) {
 void snake_realloc(Snake *s) {
   if(s->len == s->capacity) {
     s->capacity *= 2;
-    s->bodyPositions = realloc(s->bodyPositions, s->capacity);
+    s->bodyPositions = (PairPos *) realloc((void *) s->bodyPositions, s->capacity * sizeof(PairPos));
     if(s->bodyPositions == NULL) {
       perror("Error trying to realloc Snake");
       exit(1);

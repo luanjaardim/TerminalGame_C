@@ -14,3 +14,9 @@ $(TMP_DIR)/%.o: ./%.c
 main: $(TMP_DIR)/*.o
 	gcc $^ -o $@ $(CFLAGS)
 	./$@
+
+game:
+	./main
+
+clean:
+	rm -r $(TMP_DIR)
