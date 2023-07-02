@@ -1,5 +1,4 @@
 #include "lib.h"
-#include <pthread.h>
 
 unsigned MAX_X, MAX_Y;
 PairPos foodPair;
@@ -21,11 +20,10 @@ void initializeWindow() {
 	init_pair(FOOD_COLOR, COLOR_BLACK, COLOR_RED);
 	init_pair(POINTS_COLOR, COLOR_BLACK, COLOR_WHITE);
 	init_pair(BACKGROUND_COLOR, COLOR_BLACK, COLOR_BLACK);
-  
-  sleep(1);
 
 	//first food
-	foodPair = generate_food(MAX_X, MAX_Y);
+  foodPair = generate_food(MAX_X, MAX_Y);
+	while(foodPair.x == MAX_X/2 && foodPair.y == MAX_Y/2) foodPair = generate_food(MAX_X, MAX_Y);
 }
 
 void freeWindow() {
@@ -40,9 +38,11 @@ void *drawThread(void *arg) {
 		snake_move(s);
 		PairPos head_pair = snake_get_head(s);
 
-    if(snake_check_body_colisions(s) || 
+    if(snake_check_body_colisions(s, head_pair) || 
         head_pair.x >= MAX_X || head_pair.y >= MAX_Y ||
         head_pair.x < 0 || head_pair.y < 0) {
+
+      //thisThread will stay waking up the keyboard thread till the user press to exit
       while(snake_get_curr_direction(s) != 'q' && snake_get_curr_direction(s) != 'Q') pthread_cond_broadcast(&cond_var);
       break;
     }
@@ -54,9 +54,12 @@ void *drawThread(void *arg) {
 		if(head_pair.x == foodPair.x && head_pair.y == foodPair.y) {
 			snake_push_pair(s, tail_pair);
 			foodPair = generate_food(MAX_X, MAX_Y);
-      //attron(COLOR_PAIR(FOOD_COLOR));
+      while(snake_check_body_colisions(s, foodPair)) //if the food is generated over some snake body position, regenerate it
+			  foodPair = generate_food(MAX_X, MAX_Y);
+
+      attron(COLOR_PAIR(POINTS_COLOR));
       mvprintw(MAX_X - 1, 0, "Points: %d", snake_get_len(s));
-      //attroff(COLOR_PAIR(FOOD_COLOR));
+      attroff(COLOR_PAIR(POINTS_COLOR));
 		} else {
 			attron(COLOR_PAIR(BACKGROUND_COLOR));
 			mvprintw(tail_pair.x, tail_pair.y, " ");
@@ -107,7 +110,6 @@ int main() {
   pthread_join(draw, NULL);
   pthread_join(keyboard, NULL);
 
-  sleep(1);
   snake_destroy(s);
   freeWindow();
   return 0;

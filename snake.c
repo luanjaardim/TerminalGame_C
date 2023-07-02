@@ -105,10 +105,10 @@ void snake_move(Snake* s) {
   move_prev_pos_back(s->bodyPositions, (s->len-1) * sizeof(PairPos), newPos);
 }
 
-int snake_check_body_colisions(Snake *s) {
+int snake_check_body_colisions(Snake *s, PairPos colisionPair) {
   for(int pos = 4; pos < s->len; pos++) {
-    if(s->bodyPositions[pos].x == s->bodyPositions[0].x
-      && s->bodyPositions[pos].y == s->bodyPositions[0].y)
+    if(s->bodyPositions[pos].x == colisionPair.x
+      && s->bodyPositions[pos].y == colisionPair.y)
       return 1;
   }
   return 0;

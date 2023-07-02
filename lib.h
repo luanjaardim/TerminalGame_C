@@ -34,7 +34,7 @@ uint8_t snake_get_len(Snake *s);
 void snake_push_pair(Snake *s, PairPos pair);
 void snake_change_curr_direction(Snake *s, char c);
 void snake_move(Snake* s);
-int snake_check_body_colisions(Snake *s);
+int snake_check_body_colisions(Snake *s, PairPos colisionPair);
 
 //screen functions
 PairPos generate_food(unsigned max_x, unsigned max_y);
